@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        Datos
+    </title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link href="css/animate.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <link href="css/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <nav class="navbar-default navbar-static-side" role="navigation">
+            <div class="sidebar-collapse">
+                <ul class="nav metismenu" id="side-menu">
+                    <li class="nav-header">
+                        <div class="dropdown profile-element">
+                            <img alt="image" src="img/bat.png" />
+                        </div>
+                        <div class="logo-element">
+                            FTEM
+                        </div>
+                    </li>
+                    <li class="active"><a href="index.html"><i class="fa fa-table"></i> <span class="nav-label">Graficas</span></a></li>
+                    <li><a href="index.aspx"><i class="fa fa-table"></i> <span class="nav-label">Datos</span></a></li>
+                    <li><a href="bd.aspx"><i class="fa fa-area-chart"></i> <span class="nav-label">Indicadores</span></a></li>
+                    <li><a href="dds.aspx"><i class="fa fa-tachometer"></i> <span class="nav-label">DDS</span></a></li>
+                    <li><a href="carga.aspx"><i class="fa fa-upload"></i> <span class="nav-label">Carga Manual</span></a></li>
+                    <li><a href="targets.html"><i class="fa fa-bullseye"></i> <span class="nav-label">Targets</span></a></li>
+
+
+                </ul>
+
+            </div>
+        </nav>
+
+
+        <div id="page-wrapper" class="gray-bg">
+
+            <div class="page-content">
+                <div class="wrapper wrapper-content animated fadeInRight">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="ibox " id="ibox1">
+                                <div class="ibox-title">
+                                    <h5>Enercon Dashboard 3.0 - Graficas por Área</h5>
+                                </div>
+                                <div class="ibox-content">
+                                    <div class="sk-spinner sk-spinner-double-bounce">
+                                        <div class="sk-double-bounce1"></div>
+                                        <div class="sk-double-bounce2"></div>
+                                    </div>
+                                    <div class="col-md-12 d-flex justify-content-center">
+                                        <div class="text-center col-md-4">
+                                            <h5 style="margin-right:20px;">
+                                                <label class="">Fecha:</label>
+                                                <input type="week" class="form-control b-r-xl" id="date1" onchange="ObtenerJson()" onkeydown="return false">
+                                            </h5>
+                                        </div>
+                                        <div class="text-center col-md-4">
+                                            <h5 style="margin-right:20px;">
+                                                <label class="">Area:</label>
+                                                <select class="form-control b-r-xl" onchange="ObtenerJson();" id="areas">
+                                                </select>
+                                            </h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12 row justify-content-center sk-loading" id="graficas" style="margin-top:10px;margin-bottom:150px;">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <div class="float-right">
+                    <strong>British American Tobacco México</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Mainly scripts -->
+    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
+    <script src="js/plugins/slimscroll/jquery.slimscroll.min.js"></script>
+    <script src="js/plugins/pace/pace.min.js"></script>
+
+    <script src="js/plugins/dataTables/datatables.min.js"></script>
+    <script src="js/plugins/dataTables/dataTables.bootstrap4.min.js"></script>
+    <!-- Flot -->
+    <script src="js/plugins/flot/jquery.flot.js"></script>
+    <script src="js/plugins/flot/jquery.flot.tooltip.min.js"></script>
+    <script src="js/plugins/flot/jquery.flot.spline.js"></script>
+    <script src="js/plugins/flot/jquery.flot.resize.js"></script>
+    <script src="js/plugins/flot/jquery.flot.pie.js"></script>
+    <script src="js/plugins/flot/jquery.flot.time.js"></script>
+    <script src="js/plugins/flot/jquery.flot.categories.min.js"></script>
+    <script src="js/plugins/flot/jquery.flot.axislabels.js"></script>
+    <script src="js/funciones_generales.js"></script>
+
+    <!-- Custom and plugin javascript -->
+    <script src="js/inspinia.js"></script>
+    <script>
+        const getApi = "api/datos/";
+
+        async function CargarAreas() {
+            try {
+                $('#ibox1').children('.ibox-content').toggleClass('sk-loading');
+                var url = getApi + 'areas/';
+                var result = await conexion("GET", url, "");
+                var parsed = JSON.parse(result);
+                llenarSelect('#areas', 'AreaId', 'Nombre', parsed);
+                $("#areas").val("3").change();
+                //ObtenerJson();
+            } catch (e) {
+                alert(e);
+            } finally {
+                $('#ibox1').children('.ibox-content').toggleClass('sk-loading');
+            }
+
+        }
+        async function ObtenerJson() {
+            try {
+                $('#ibox1').children('.ibox-content').toggleClass('sk-loading');
+                $('#graficas').empty();
+                var url = getApi + '?fecha=' + $('#date1').val() + '&area=' + $('#areas').val();
+                var result = await conexion("GET", url, "");
+                var parsed = JSON.parse(result);
+                crearGraficas(parsed);
+            } catch (e) {
+                alert(e);
+            } finally {
+                $('#ibox1').children('.ibox-content').toggleClass('sk-loading');
+            }
+        }
+        function crearGraficas(json) {
+            var dias = getDiasJson(json);
+            for (var x = 0; x < json.length; x++) {
+                $('#graficas').append('<div class="flot-chart col-md-12 text-center " style="margin-top:40px; margin-bottom:10px;"><h3 class= "col-md-12" id = "msTitulo' + x + '" >' + json[x].Indicador + '</h3 >' +
+                    '<div class="flot-chart-content col-md-12" id="msGrafica' + x + '"></div>' +
+                    '<div class="col-md-2" id="msLegend' + x + '" style="float: right;"></div></div>');
+                cargarGraficaDatos(json[x], x, dias);
+            }
+        }
+        function getDiasJson(json) {
+            var dias = []
+            if (json.length > 0) {
+                var keys = Object.keys(json[0]);
+                keys.forEach(function (key) {
+                    if (key.includes('/'))
+                        dias.push(key);
+                });
+            }
+            return dias;
+
+        }
+        function cargarGraficaDatos(datos, indice, dias) {
+            var limite = datos.Maximo == null ? 999999 : datos.Maximo
+            var data = [];
+            var ticks = [];
+            for (var x = 0; x < dias.length; x++) {
+                data.push({ data: [[x, datos[dias[x]]]], color: datos[dias[x]] > limite ? 'red' : '#6FB2ED' });
+                ticks.push([x, dias[x]]);
+            }
+            $.plot($("#msGrafica" + indice), data, {
+                series: {
+                    bars: {
+                        show: true,
+                        order: 1,
+                        barWidth: 0.6,
+                        align: "center",
+                    }
+                },
+                xaxes: [{
+                    mode: 'categories',
+                    tickLength: 0,
+                    axisLabel: 'Semana',
+                    ticks: ticks
+                }],
+                yaxes: [{
+                    min: 0,
+                    axisLabel: 'Limite',
+                }],
+                legend: {
+                    show: true,
+                    placement: 'outsideGrid',
+                    container: $('#msLegend' + indice),
+                },
+                //colors: ["#6FB2ED", "#F9A40F"],
+                grid: {
+                    color: "#999999",
+                    hoverable: true,
+                    clickable: true,
+                    tickColor: "#D4D4D4",
+                    borderWidth: 0,
+                    hoverable: true, //IMPORTANT! this is needed for tooltip to work,
+                    markings: [
+                        { color: '#FF0000', lineWidth: 4, yaxis: { from: limite, to: limite } },
+                    ]
+
+                },
+                tooltip: true,
+                tooltipOpts: {
+                    content: function (label, x, y) {
+                        return ticks[x][1] + " tiene " + (Math.round(y * 100) / 100).toFixed(1).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " " + datos.Unidad;
+                    },
+                    defaultTheme: true
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            //ObtenerMenus();
+            getCurrentWeek('#date1', getApi);
+            CargarAreas();
+            //cargarGraficaKilomentros();
+        });
+    </script>
+
+
+
+</body>
+
+</html>
